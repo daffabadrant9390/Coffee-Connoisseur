@@ -1,5 +1,7 @@
 .container {
   margin-bottom: 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .title {
@@ -36,7 +38,7 @@
   color: #ffffff;
   outline: 0;
   border: 0px;
-  border-radius: 6px;
+  border-radius: 4px;
 
   font-size: 1.125rem;
   line-height: 1.75rem;
