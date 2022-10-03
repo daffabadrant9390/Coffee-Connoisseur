@@ -2,9 +2,22 @@ import Head from 'next/head';
 import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 import Banner from '../components/Banner';
+import ProductCard from '../components/ProductCard';
+import coffeeStoresData from '../data/coffee-stores.json';
 
-export default function Home() {
-  const handleOnClickBtnBanner = () => console.log('Hi, thanks for click me!');
+export async function getStaticProps() {
+  //* If our data coming from API, we need to fetch the data first. Otherwise, just pass it as props
+  // const data = await fetch....
+
+  return {
+    props: {
+      coffeeStores: coffeeStoresData,
+    },
+  };
+}
+
+export default function Home(props) {
+  const handleOnClickBtnBanner = () => alert('Go to coffee list section!');
 
   return (
     <div className={styles.container}>
@@ -23,9 +36,28 @@ export default function Home() {
           <Image
             src="/static/hero-image.png"
             alt="hero-img"
-            width={700}
-            height={400}
+            width={500}
+            height={300}
           />
+        </div>
+        <div className={styles.productSection}>
+          {!!props.coffeeStores.length && (
+            <>
+              <h2 className={styles.heading}>Toronto Coffee Stores</h2>
+              <div className={styles.productCardSection}>
+                {(props.coffeeStores || []).map((coffeeStore, idx) => {
+                  return (
+                    <ProductCard
+                      key={`coffee-store-${idx}`}
+                      productTitle={coffeeStore.name || ''}
+                      imgUrl={coffeeStore.imgUrl}
+                      href={`/coffee-stores/${coffeeStore.id}`}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>
