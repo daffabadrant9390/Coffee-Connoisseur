@@ -4,37 +4,20 @@ import styles from '../styles/Home.module.css';
 import Banner from '../components/Banner';
 import ProductCard from '../components/ProductCard';
 import coffeeStoresData from '../data/coffee-stores.json';
+import { fetchCoffeeStoresData } from '../lib/services/coffeeStores';
 
 export async function getStaticProps() {
-  //* If our data coming from API, we need to fetch the data first. Otherwise, just pass it as props
-  // const data = await fetch....
-
-  const options = {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      Authorization: 'fsq3s9QHr97BoufhqUOvLMQ3yJqx6qcZsJLUcbYaL01IMDY=',
-    },
-  };
-
-  const fetchData = await fetch(
-    'https://api.foursquare.com/v3/places/search?query=coffee&ll=34.049477%2C-118.263414&limit=6',
-    options
-  );
-  const response = await fetchData.json();
-  const data = response.results;
+  const coffeeStores = await fetchCoffeeStoresData();
 
   return {
     props: {
-      coffeeStores: data,
+      coffeeStores,
     },
   };
 }
 
 export default function Home(props) {
   const handleOnClickBtnBanner = () => alert('Go to coffee list section!');
-
-  // console.log('props: ', props);
 
   return (
     <div className={styles.container}>
@@ -68,6 +51,7 @@ export default function Home(props) {
                       key={`coffee-store-${idx}`}
                       productTitle={coffeeStore.name || ''}
                       imgUrl={
+                        coffeeStore?.imgUrl ||
                         'https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80'
                       }
                       href={`/coffee-stores/${coffeeStore.fsq_id}`}

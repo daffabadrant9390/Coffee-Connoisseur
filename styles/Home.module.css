@@ -3,7 +3,8 @@
 /** Mobile first development **/
 
 .container {
-  margin-bottom: 14rem /* 224px */;
+  /* margin-bottom: 14rem 224px; */
+  margin-bottom: 8rem;
 }
 
 .main {
