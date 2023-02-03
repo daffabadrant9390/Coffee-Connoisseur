@@ -5,6 +5,8 @@ import Banner from '../components/Banner';
 import ProductCard from '../components/ProductCard';
 import coffeeStoresData from '../data/coffee-stores.json';
 import { fetchCoffeeStoresData } from '../lib/services/coffeeStores';
+import { useTrackingLocation } from '../lib/hooks/useTrackingLocation';
+import { useEffect, useState } from 'react';
 
 export async function getStaticProps() {
   const coffeeStores = await fetchCoffeeStoresData();
@@ -17,7 +19,33 @@ export async function getStaticProps() {
 }
 
 export default function Home(props) {
-  const handleOnClickBtnBanner = () => alert('Go to coffee list section!');
+  const { locationErrorMsg, latLong, handleTrackLocation, isFindingLocation } =
+    useTrackingLocation();
+  const handleOnClickBtnBanner = () => handleTrackLocation();
+
+  const [coffeeStoresNearMe, setCoffeeStoresNearMe] = useState([]);
+  const [errorCoffeeStoresNearMe, setErrorCoffeeStoresNearMe] = useState(null);
+
+  useEffect(() => {
+    const setCoffeeStoresByLocation = async () => {
+      if (!!latLong && !!latLong.latitudeData && !!latLong.longitudeData) {
+        try {
+          const latLongModifier = `${latLong?.latitudeData},${latLong?.longitudeData}`;
+          const fetchedCoffeeStores = await fetchCoffeeStoresData(
+            latLongModifier,
+            10
+          );
+          // console.log('fetchedCoffeeStores from button: ', fetchedCoffeeStores);
+          setCoffeeStoresNearMe(fetchedCoffeeStores);
+        } catch (error) {
+          // console.log('error: ', error);
+          setErrorCoffeeStoresNearMe(error.message);
+        }
+      }
+    };
+
+    setCoffeeStoresByLocation();
+  }, [latLong, latLong?.latitudeData, latLong?.longitudeData]);
 
   return (
     <div className={styles.container}>
@@ -29,7 +57,7 @@ export default function Home(props) {
 
       <main className={styles.main}>
         <Banner
-          buttonText="View stores nearby"
+          buttonText={isFindingLocation ? 'Locating...' : 'View stores nearby'}
           handleOnClick={handleOnClickBtnBanner}
         />
         <div className={styles.heroImage}>
@@ -40,10 +68,44 @@ export default function Home(props) {
             height={300}
           />
         </div>
+        {locationErrorMsg && (
+          <p className={styles.errorMsg}>
+            Something went wrong: {locationErrorMsg}
+          </p>
+        )}
+        {errorCoffeeStoresNearMe && (
+          <p className={styles.errorMsg}>
+            Something went wrong: {errorCoffeeStoresNearMe}
+          </p>
+        )}
+        {/* THIS IS FOR COFFEE STORES IN NEAR ME = DYNAMIC CSR */}
         <div className={styles.productSection}>
-          {!!props.coffeeStores.length && (
+          {!!coffeeStoresNearMe.length && coffeeStoresNearMe.length > 0 && (
             <>
-              <h2 className={styles.heading}>Los Angeles Coffee Stores</h2>
+              <h2 className={styles.heading}>Coffee Stores Near Me</h2>
+              <div className={styles.productCardSection}>
+                {(coffeeStoresNearMe || []).map((coffeeStore, idx) => {
+                  return (
+                    <ProductCard
+                      key={`coffee-store-${idx}`}
+                      productTitle={coffeeStore.name || ''}
+                      imgUrl={
+                        coffeeStore?.imgUrl ||
+                        'https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80'
+                      }
+                      href={`/coffee-stores/${coffeeStore.fsq_id}`}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+        {/* THIS IS FOR COFFEE STORES IN JAKARTA = STATIC */}
+        <div className={styles.productSection}>
+          {!!props.coffeeStores.length && !!props.coffeeStores.length > 0 && (
+            <>
+              <h2 className={styles.heading}>Jakarta Coffee Stores</h2>
               <div className={styles.productCardSection}>
                 {(props.coffeeStores || []).map((coffeeStore, idx) => {
                   return (

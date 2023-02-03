@@ -51,6 +51,14 @@
   background-color: var(--text-purple-dark);
 }
 
+.button:focus {
+  border: none;
+}
+
+.button:active {
+  border: none;
+}
+
 /**
     Breakpoints:
     ------------

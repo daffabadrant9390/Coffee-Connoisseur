@@ -16,12 +16,13 @@ import styles from './index.module.css';
 export async function getStaticProps(staticProps) {
   const id = staticProps?.params?.id;
   const coffeeStoresData = await fetchCoffeeStoresData();
+  const findCoffeeStore = coffeeStoresData?.find(
+    (coffeeStore) => coffeeStore?.fsq_id?.toString() === id?.toString()
+  );
 
   return {
     props: {
-      coffeeStore: coffeeStoresData?.find(
-        (coffeeStore) => coffeeStore?.fsq_id?.toString() === id?.toString()
-      ),
+      coffeeStore: findCoffeeStore ? findCoffeeStore : {},
     },
   };
 }
@@ -50,6 +51,7 @@ const CoffeeStore = (props) => {
   const router = useRouter();
   const [isVoted, setIsVoted] = useState(false);
   const [rating, setRating] = useState(1);
+  console.log('props: ', props);
 
   // using isFallback to check if the specifc data is exist, but we are not listed the {params: {id: '...'}} on getStaticPaths
   if (router.isFallback) {
@@ -59,8 +61,8 @@ const CoffeeStore = (props) => {
     */
     return <div>Loading....</div>;
   }
-  const { name, location, imgUrl } = props.coffeeStore;
-  const { address, region } = location;
+  const { name, location, imgUrl } = props.coffeeStore || {};
+  const { address, region } = location || {};
 
   return (
     <>
@@ -78,7 +80,7 @@ const CoffeeStore = (props) => {
         </div>
         <div className={styles.product_detail_wrapper}>
           <div className={styles.product_title_image}>
-            <h1 className={styles.title}>{name}</h1>
+            <h1 className={styles.title}>{name || ''}</h1>
             <div className={styles.product_img_wrapper}>
               <Image
                 className={styles.product_img}
@@ -101,11 +103,11 @@ const CoffeeStore = (props) => {
                 height={24}
                 className={styles.detail_icon}
               />
-              <p className={styles.detail_text}>{address}</p>
+              <p className={styles.detail_text}>{address || ''}</p>
             </div>
             <div className={styles.detail_item}>
               <Image src={nearMeIcon} alt="" width={24} height={24} />
-              <p className={styles.detail_text}>{region}</p>
+              <p className={styles.detail_text}>{region || ''}</p>
             </div>
             <div className={styles.detail_item}>
               <Image src={starIcon} alt="" width={24} height={24} />

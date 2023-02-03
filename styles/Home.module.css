@@ -41,6 +41,23 @@
   align-content: center;
 }
 
+@keyframes fadeOut {
+  to {
+    /* display: none; */
+    /* color: white; */
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+.errorMsg {
+  display: block;
+  color: #ff0000;
+  font-weight: 600;
+  animation: fadeOut 0s ease-in 5s forwards;
+}
+
 /** Breakpoints:
   sm: min-width: 640px;
   md: min-width: 768px;
