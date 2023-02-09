@@ -6,9 +6,12 @@ import ProductCard from '../components/ProductCard';
 import coffeeStoresData from '../data/coffee-stores.json';
 import { fetchCoffeeStoresData } from '../lib/services/coffeeStores';
 import { useTrackingLocation } from '../lib/hooks/useTrackingLocation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
+import { ACTION_TYPE } from '../store/action';
+import { CoffeeStoresContext } from '../store/coffeeStoresContext';
 
 export async function getStaticProps() {
+  //! for the fetching methods which done on the server side, dont use queryString and hit the url from getCoffeeStoresByLocation. This is because when the API fetched on build time, the server is not 100% ready to use the API from /api/getCoffeeStoresByLocation file
   const coffeeStores = await fetchCoffeeStoresData();
 
   return {
@@ -19,33 +22,45 @@ export async function getStaticProps() {
 }
 
 export default function Home(props) {
-  const { locationErrorMsg, latLong, handleTrackLocation, isFindingLocation } =
+  const { locationErrorMsg, handleTrackLocation, isFindingLocation } =
     useTrackingLocation();
   const handleOnClickBtnBanner = () => handleTrackLocation();
 
-  const [coffeeStoresNearMe, setCoffeeStoresNearMe] = useState([]);
   const [errorCoffeeStoresNearMe, setErrorCoffeeStoresNearMe] = useState(null);
+  const { state, dispatch } = useContext(CoffeeStoresContext);
+  // Get the latLong and coffeeStoresNearMe data coming from CoffeeStoresContext
+  const {latLong, coffeeStores: coffeeStoresNearMe} = state;
 
   useEffect(() => {
     const setCoffeeStoresByLocation = async () => {
-      if (!!latLong && !!latLong.latitudeData && !!latLong.longitudeData) {
+      if (!!latLong && !!latLong.latitude && !!latLong.longitude) {
         try {
-          const latLongModifier = `${latLong?.latitudeData},${latLong?.longitudeData}`;
-          const fetchedCoffeeStores = await fetchCoffeeStoresData(
-            latLongModifier,
-            10
-          );
-          // console.log('fetchedCoffeeStores from button: ', fetchedCoffeeStores);
-          setCoffeeStoresNearMe(fetchedCoffeeStores);
+          const latLongModifier = `${latLong?.latitude},${latLong?.longitude}`;
+          // const fetchedCoffeeStores = await fetchCoffeeStoresData(
+          //   latLongModifier,
+          //   10
+          // );
+
+          //! Here we will use the getCoffeeStoresByLocation api to fetch the coffeeStores data using queryString
+          const response = await fetch(`/api/getCoffeeStoresByLocation?latLong=${latLongModifier}&limit=10`);
+          const fetchedCoffeeStores = await response.json();
+          console.log("fetchedCoffeeStores: ", fetchedCoffeeStores);
+
+          dispatch({
+            type: ACTION_TYPE.SET_COFFEE_STORES,
+            payload: {
+              coffeeStores: fetchedCoffeeStores.response
+            }
+          })
+          setErrorCoffeeStoresNearMe(null);
         } catch (error) {
-          // console.log('error: ', error);
           setErrorCoffeeStoresNearMe(error.message);
         }
       }
     };
 
     setCoffeeStoresByLocation();
-  }, [latLong, latLong?.latitudeData, latLong?.longitudeData]);
+  }, [latLong, latLong?.latitude, latLong?.longitude]);
 
   return (
     <div className={styles.container}>

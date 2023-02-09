@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -10,11 +10,14 @@ import locationOnIcon from '../../public/icons/locationOn.svg';
 import arrowBackIcon from '../../public/icons/arrowBack.svg';
 import cx from 'classnames';
 import { fetchCoffeeStoresData } from '../../lib/services/coffeeStores';
+import { CoffeeStoresContext } from '../../store/coffeeStoresContext';
+import { isObjectEmpty } from '../../utils/isObjectEmpty';
 
-import styles from './index.module.css';
+import styles from './index.module.scss';
+// import styles from './index.module.css';
 
-export async function getStaticProps(staticProps) {
-  const id = staticProps?.params?.id;
+export async function getStaticProps(staticinitialProps) {
+  const id = staticinitialProps?.params?.id;
   const coffeeStoresData = await fetchCoffeeStoresData();
   const findCoffeeStore = coffeeStoresData?.find(
     (coffeeStore) => coffeeStore?.fsq_id?.toString() === id?.toString()
@@ -47,21 +50,40 @@ export async function getStaticPaths() {
   };
 }
 
-const CoffeeStore = (props) => {
+const CoffeeStore = (initialProps) => {
+  // Grab the id from url
   const router = useRouter();
+  const id = router.query.id;
+
+  // Set initial value of coffeeStore to be the data from getStaticProps. If not exist, use the data from useContext
+  const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
   const [isVoted, setIsVoted] = useState(false);
   const [rating, setRating] = useState(1);
-  console.log('props: ', props);
+
+  const { state } = useContext(CoffeeStoresContext);
+  const { coffeeStores: coffeeStoresNearMe } = state;
+
+  useEffect(() => {
+    if (initialProps.coffeeStore && isObjectEmpty(initialProps.coffeeStore)) {
+      if (!!coffeeStoresNearMe?.length) {
+        const specificCoffeeStore = coffeeStoresNearMe?.find(
+          (coffeeStore) =>
+            coffeeStore?.fsq_id?.toString() === router.query?.id?.toString()
+        );
+        setCoffeeStore(specificCoffeeStore);
+      }
+    }
+  }, [id]);
 
   // using isFallback to check if the specifc data is exist, but we are not listed the {params: {id: '...'}} on getStaticPaths
   if (router.isFallback) {
-    /* show us loading screen until the isFallback check the data on getStaticProps
-      - If the data is exist (the id is found by getStaticProps) => show the page with specific data
-      - If the data is not exist => will show error "Failed to load static props"
+    /* show us loading screen until the isFallback check the data on getStaticinitialinitialProps
+      - If the data is exist (the id is found by getStaticinitialProps) => show the page with specific data
+      - If the data is not exist => will show error "Failed to load static initialProps"
     */
     return <div>Loading....</div>;
   }
-  const { name, location, imgUrl } = props.coffeeStore || {};
+  const { name, location, imgUrl } = coffeeStore || {};
   const { address, region } = location || {};
 
   return (

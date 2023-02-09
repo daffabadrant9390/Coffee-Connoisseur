@@ -1,4 +1,4 @@
-import styles from './banner.module.css';
+import styles from './index.module.scss';
 
 const Banner = ({ buttonText, handleOnClick }) => {
   return (

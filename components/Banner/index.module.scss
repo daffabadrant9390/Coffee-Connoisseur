@@ -1,0 +1,153 @@
+.container {
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 2;
+
+  .title {
+    letter-spacing: -0.025em;
+    font-weight: 800;
+    color: var(--text-black);
+    font-size: 3rem;
+    line-height: 1;
+
+    .title1 {
+      color: rgba(249, 250, 251, 1);
+    }
+    
+    .title2 {
+      display: block;
+      color: var(--text-purple);
+    }
+  }
+
+  .subTitle {
+    margin-top: 0.75rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    color: var(--text-white-100);
+  }
+
+  .buttonWrapper {
+    margin-top: 1.25rem;
+
+    .button {
+      background-color: var(--text-purple);
+      cursor: pointer;
+      color: #ffffff;
+      outline: 0;
+      border: 0px;
+      border-radius: 4px;
+    
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+      padding: 1rem 1.5rem;
+    
+      transition: all 0.5s;
+
+      &:hover {
+        background-color: var(--text-purple-dark);
+      }
+      
+      &:focus {
+        border: none;
+      }
+      
+      &:active {
+        border: none;
+      }
+    }
+  }
+}
+
+/**
+    Breakpoints:
+    ------------
+    sm: min-width: 640px; // small device
+    md: min-width: 768px; // medium device
+    lg: min-width: 1024px; // large device
+    xl: min-width: 1280px; // extra large device
+    2xl: min-width: 1536px; // 2 x extra large device
+**/
+
+/** sm breakpoint **/
+@media only screen and (min-width: 640px) {
+  .container {
+
+    .title {
+      font-size: 3rem;
+      line-height: 1;
+    }
+  
+    .subTitle {
+      margin-top: 1.25rem;
+      max-width: 36rem;
+    }
+  
+    .buttonWrapper {
+      display: flex;
+      margin-top: 2rem;
+    }
+  }
+}
+
+/** md breakpoint **/
+@media only screen and (min-width: 768px) {
+  .container {
+
+    .title {
+      font-size: 3.75rem;
+      line-height: 1;
+    }
+  
+    .subTitle {
+      margin-top: 1.25rem;
+    }
+  
+    .buttonWrapper {
+
+      .button {
+        padding: 1rem 2.5rem;
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+      }
+    }
+  }
+}
+
+/** lg breakpoint **/
+@media only screen and (min-width: 1024px) {
+  .container {
+    text-align: left;
+
+    .title {
+      font-size: 4.5rem;
+      line-height: 1;
+
+      .title2 {
+        padding-left: 0.5rem;
+      }
+    }
+  
+    .subTitle {
+      margin-left: 0px;
+      margin-right: 0px;
+    }
+  
+    .buttonWrapper {
+      justify-content: flex-start;
+    }
+  }
+}
+
+/** xl breakpoint **/
+@media only screen and (min-width: 1280px) {
+  .container {
+    
+    .title {
+
+      .title2 {
+        display: inline;
+      }
+    }
+  }
+}

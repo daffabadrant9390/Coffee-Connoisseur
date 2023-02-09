@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import styles from './index.module.css';
+import styles from './index.module.scss';
 import cx from 'classnames';
 
 const ProductCard = ({ productTitle, imgUrl, href }) => {
