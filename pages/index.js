@@ -29,7 +29,7 @@ export default function Home(props) {
   const [errorCoffeeStoresNearMe, setErrorCoffeeStoresNearMe] = useState(null);
   const { state, dispatch } = useContext(CoffeeStoresContext);
   // Get the latLong and coffeeStoresNearMe data coming from CoffeeStoresContext
-  const {latLong, coffeeStores: coffeeStoresNearMe} = state;
+  const { latLong, coffeeStores: coffeeStoresNearMe } = state;
 
   useEffect(() => {
     const setCoffeeStoresByLocation = async () => {
@@ -42,16 +42,18 @@ export default function Home(props) {
           // );
 
           //! Here we will use the getCoffeeStoresByLocation api to fetch the coffeeStores data using queryString
-          const response = await fetch(`/api/getCoffeeStoresByLocation?latLong=${latLongModifier}&limit=10`);
+          const response = await fetch(
+            `/api/getCoffeeStoresByLocation?latLong=${latLongModifier}&limit=10`
+          );
           const fetchedCoffeeStores = await response.json();
-          console.log("fetchedCoffeeStores: ", fetchedCoffeeStores);
+          console.log('fetchedCoffeeStores: ', fetchedCoffeeStores);
 
           dispatch({
             type: ACTION_TYPE.SET_COFFEE_STORES,
             payload: {
-              coffeeStores: fetchedCoffeeStores.response
-            }
-          })
+              coffeeStores: fetchedCoffeeStores.response,
+            },
+          });
           setErrorCoffeeStoresNearMe(null);
         } catch (error) {
           setErrorCoffeeStoresNearMe(error.message);
@@ -108,7 +110,7 @@ export default function Home(props) {
                         coffeeStore?.imgUrl ||
                         'https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80'
                       }
-                      href={`/coffee-stores/${coffeeStore.fsq_id}`}
+                      href={`/coffee-stores/${coffeeStore.id}`}
                     />
                   );
                 })}
@@ -131,7 +133,7 @@ export default function Home(props) {
                         coffeeStore?.imgUrl ||
                         'https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80'
                       }
-                      href={`/coffee-stores/${coffeeStore.fsq_id}`}
+                      href={`/coffee-stores/${coffeeStore.id}`}
                     />
                   );
                 })}

@@ -20,7 +20,7 @@ export async function getStaticProps(staticinitialProps) {
   const id = staticinitialProps?.params?.id;
   const coffeeStoresData = await fetchCoffeeStoresData();
   const findCoffeeStore = coffeeStoresData?.find(
-    (coffeeStore) => coffeeStore?.fsq_id?.toString() === id?.toString()
+    (coffeeStore) => coffeeStore?.id?.toString() === id?.toString()
   );
 
   return {
@@ -36,7 +36,7 @@ export async function getStaticPaths() {
   const paths = coffeeStoresData?.map((coffeeStore) => {
     return {
       params: {
-        id: coffeeStore.fsq_id.toString(),
+        id: coffeeStore.id.toString(),
       },
     };
   });
@@ -63,17 +63,71 @@ const CoffeeStore = (initialProps) => {
   const { state } = useContext(CoffeeStoresContext);
   const { coffeeStores: coffeeStoresNearMe } = state;
 
+  const handleCreateCoffeeStoreAirtable = async (coffeeStore) => {
+    const { id, name, imgUrl, address, region } = coffeeStore || {};
+
+    const response = await fetch('/api/createCoffeeStore', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id,
+        name,
+        imgUrl,
+        voting: 0,
+        address: address || '',
+        region: region || '',
+      }),
+    });
+    const dbCoffeeStore = await response.json();
+    console.log('dbCoffeeStore: ', dbCoffeeStore);
+  };
+
+  console.log('coffeeStore data right now: ', coffeeStore);
+
+  const handleGetCoffeeStoreByIdAirtable = async (coffeeStoreQueryId) => {
+    const response = await fetch(
+      `/api/getCoffeeStoreById?id=${coffeeStoreQueryId}`
+    );
+    const dbCoffeeStore = await response.json();
+    return dbCoffeeStore;
+  };
+
   useEffect(() => {
     if (initialProps.coffeeStore && isObjectEmpty(initialProps.coffeeStore)) {
       if (!!coffeeStoresNearMe?.length) {
-        const specificCoffeeStore = coffeeStoresNearMe?.find(
+        const specificCoffeeStoreContext = coffeeStoresNearMe?.find(
           (coffeeStore) =>
-            coffeeStore?.fsq_id?.toString() === router.query?.id?.toString()
+            coffeeStore?.id?.toString() === router.query?.id?.toString()
         );
-        setCoffeeStore(specificCoffeeStore);
+
+        if (!!specificCoffeeStoreContext) {
+          setCoffeeStore(specificCoffeeStoreContext);
+          handleCreateCoffeeStoreAirtable(specificCoffeeStoreContext);
+        }
+      } else {
+        const getCoffeeStoreAirtable = async () => {
+          // Retrieve the data from airtable if exist
+          const specificCoffeeStoreAirtable =
+            await handleGetCoffeeStoreByIdAirtable(id);
+          const { coffeeStore: specificCoffeeStoreAirtableRecord } =
+            specificCoffeeStoreAirtable;
+
+          if (
+            !!specificCoffeeStoreAirtableRecord &&
+            !!specificCoffeeStoreAirtableRecord.length
+          ) {
+            setCoffeeStore(specificCoffeeStoreAirtableRecord[0]);
+          }
+        };
+        getCoffeeStoreAirtable();
       }
+    } else {
+      // Add SSG data to airtable database
+      handleCreateCoffeeStoreAirtable(initialProps.coffeeStore);
     }
-  }, [id]);
+  }, [id, initialProps, initialProps.coffeeStore, coffeeStoresNearMe]);
 
   // using isFallback to check if the specifc data is exist, but we are not listed the {params: {id: '...'}} on getStaticPaths
   if (router.isFallback) {
@@ -83,8 +137,7 @@ const CoffeeStore = (initialProps) => {
     */
     return <div>Loading....</div>;
   }
-  const { name, location, imgUrl } = coffeeStore || {};
-  const { address, region } = location || {};
+  const { name, address, region, imgUrl } = coffeeStore || {};
 
   return (
     <>
