@@ -1,4 +1,8 @@
-import { table, getAirtableRecords } from '../../lib/services/airtable';
+import {
+  table,
+  getAirtableRecords,
+  findCoffeeStoreRecordByFormula,
+} from '../../lib/services/airtable';
 
 const createCoffeeStore = async (req, res) => {
   // Only run the code when the request method is POST
@@ -12,23 +16,17 @@ const createCoffeeStore = async (req, res) => {
 
     try {
       if (!!id) {
-        const findCoffeeStoresRecordById = await table
-          .select({
-            // This function will be returned in Array form
-            filterByFormula: `id="${id}"`,
-          })
-          .firstPage(); // Since we only have 1 page, use firstPage
+        const findCoffeeStoreRecordById = await findCoffeeStoreRecordByFormula(
+          id
+        );
 
-        if (!!findCoffeeStoresRecordById.length) {
+        if (!!findCoffeeStoreRecordById) {
           // return the data to the user
-          const coffeeStoreRecord = getAirtableRecords(
-            findCoffeeStoresRecordById
-          );
-
           res.json({
             message: 'Coffee Stores Found',
-            coffeeStore: coffeeStoreRecord,
+            coffeeStore: findCoffeeStoreRecordById,
           });
+          return findCoffeeStoreRecordById;
         } else {
           if (!!name) {
             // create a new store of coffee store

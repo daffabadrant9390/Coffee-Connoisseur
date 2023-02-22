@@ -102,6 +102,7 @@ export default function Home(props) {
               <h2 className={styles.heading}>Coffee Stores Near Me</h2>
               <div className={styles.productCardSection}>
                 {(coffeeStoresNearMe || []).map((coffeeStore, idx) => {
+                  console.log('coffee-store-dynamic-id: ', coffeeStore.id);
                   return (
                     <ProductCard
                       key={`coffee-store-${idx}`}

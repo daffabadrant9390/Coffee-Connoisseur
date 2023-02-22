@@ -12,6 +12,7 @@ import cx from 'classnames';
 import { fetchCoffeeStoresData } from '../../lib/services/coffeeStores';
 import { CoffeeStoresContext } from '../../store/coffeeStoresContext';
 import { isObjectEmpty } from '../../utils/isObjectEmpty';
+import useSWR from 'swr';
 
 import styles from './index.module.scss';
 // import styles from './index.module.css';
@@ -54,11 +55,12 @@ const CoffeeStore = (initialProps) => {
   // Grab the id from url
   const router = useRouter();
   const id = router.query.id;
+  console.log('router data: ', router);
 
   // Set initial value of coffeeStore to be the data from getStaticProps. If not exist, use the data from useContext
   const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
   const [isVoted, setIsVoted] = useState(false);
-  const [rating, setRating] = useState(1);
+  const [voting, setVoting] = useState(1);
 
   const { state } = useContext(CoffeeStoresContext);
   const { coffeeStores: coffeeStoresNearMe } = state;
@@ -84,8 +86,6 @@ const CoffeeStore = (initialProps) => {
     console.log('dbCoffeeStore: ', dbCoffeeStore);
   };
 
-  console.log('coffeeStore data right now: ', coffeeStore);
-
   const handleGetCoffeeStoreByIdAirtable = async (coffeeStoreQueryId) => {
     const response = await fetch(
       `/api/getCoffeeStoreById?id=${coffeeStoreQueryId}`
@@ -95,7 +95,15 @@ const CoffeeStore = (initialProps) => {
   };
 
   useEffect(() => {
+    /*
+      - If the initialProps.cofffeeStore (coffee store from getStaticProps) is empty, fetch data from context or airtable
+      - If the coffee store from getStaticProps is exist, add the data to airtable database too
+    */
     if (initialProps.coffeeStore && isObjectEmpty(initialProps.coffeeStore)) {
+      /* 
+        - Check the data inside context. If exist, get the data from there and also add the data into airtable database 
+        - If the data inside context isnt available (because page got reloaded), fetch the data from airtable database
+      */
       if (!!coffeeStoresNearMe?.length) {
         const specificCoffeeStoreContext = coffeeStoresNearMe?.find(
           (coffeeStore) =>
@@ -129,15 +137,42 @@ const CoffeeStore = (initialProps) => {
     }
   }, [id, initialProps, initialProps.coffeeStore, coffeeStoresNearMe]);
 
+  const { name, address, region, imgUrl } = coffeeStore || {};
+  console.log('coffeeStore:', coffeeStore);
+  console.log('queryId: ', id);
+
+  // Try fetching the data from /api/getCoffeeStoreById using SWR (Stale-While-Revalidate)
+  const fetcher = (url) => fetch(url).then((res) => res.json());
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
+
+  // Get the specific coffee store by id using SWR
+  useEffect(() => {
+    if (!!data) {
+      console.log('data from SWR: ', data);
+      // Set the coffeeStore state using data from SWR
+      setCoffeeStore(data?.coffeeStore?.[0] || {});
+      // Set the voting state using voting data from SWR
+      setVoting(data?.coffeeStore?.[0]?.voting || 0);
+    }
+  }, [data]);
+
+  // if SWR return error
+  if (error) {
+    return (
+      <div>
+        <p>Something went wrong ({error})</p>
+      </div>
+    );
+  }
+
   // using isFallback to check if the specifc data is exist, but we are not listed the {params: {id: '...'}} on getStaticPaths
   if (router.isFallback) {
     /* show us loading screen until the isFallback check the data on getStaticinitialinitialProps
-      - If the data is exist (the id is found by getStaticinitialProps) => show the page with specific data
-      - If the data is not exist => will show error "Failed to load static initialProps"
-    */
+        - If the data is exist (the id is found by getStaticinitialProps) => show the page with specific data
+        - If the data is not exist => will show error "Failed to load static initialProps"
+      */
     return <div>Loading....</div>;
   }
-  const { name, address, region, imgUrl } = coffeeStore || {};
 
   return (
     <>
@@ -186,13 +221,13 @@ const CoffeeStore = (initialProps) => {
             </div>
             <div className={styles.detail_item}>
               <Image src={starIcon} alt="" width={24} height={24} />
-              <p className={styles.detail_text}>{rating}</p>
+              <p className={styles.detail_text}>{voting}</p>
             </div>
             {isVoted ? (
               <button
                 className={cx(styles.btn, styles.remove_vote_btn)}
                 onClick={() => {
-                  setRating(rating - 1);
+                  setVoting(voting - 1);
                   setIsVoted(false);
                 }}
               >

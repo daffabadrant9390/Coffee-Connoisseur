@@ -1,4 +1,4 @@
-import { table, getAirtableRecords } from '../../lib/services/airtable';
+import { findCoffeeStoreRecordByFormula } from '../../lib/services/airtable';
 
 const getCoffeeStoreById = async (req, res) => {
   if (req.method === 'GET') {
@@ -6,23 +6,20 @@ const getCoffeeStoreById = async (req, res) => {
     const { id } = req.query; // use this instead because we add the id on url
 
     if (!!id) {
-      const specificCoffeeStore = await table
-        .select({
-          // This function will be returned in Array form
-          filterByFormula: `id="${id}"`,
-        })
-        .firstPage();
-      const specificCoffeeStoreRecord = getAirtableRecords(specificCoffeeStore);
-      console.log('specificCoffeeStore: ', specificCoffeeStoreRecord);
+      const findCoffeeStoreRecordById = await findCoffeeStoreRecordByFormula(
+        id
+      );
 
-      if (!!specificCoffeeStore) {
+      console.log('findCoffeeStoreRecordById: ', findCoffeeStoreRecordById);
+
+      if (!!findCoffeeStoreRecordById) {
         res.status(200);
         res.json({
           message: 'Specific Coffe Store found!',
-          coffeeStore: specificCoffeeStoreRecord,
+          coffeeStore: findCoffeeStoreRecordById,
         });
 
-        return specificCoffeeStoreRecord;
+        return findCoffeeStoreRecordById;
       } else {
         res.status(400);
         res.json({
