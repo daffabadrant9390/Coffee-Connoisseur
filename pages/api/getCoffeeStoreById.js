@@ -10,8 +10,6 @@ const getCoffeeStoreById = async (req, res) => {
         id
       );
 
-      console.log('findCoffeeStoreRecordById: ', findCoffeeStoreRecordById);
-
       if (!!findCoffeeStoreRecordById) {
         res.status(200);
         res.json({

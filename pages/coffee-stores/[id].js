@@ -13,9 +13,7 @@ import { fetchCoffeeStoresData } from '../../lib/services/coffeeStores';
 import { CoffeeStoresContext } from '../../store/coffeeStoresContext';
 import { isObjectEmpty } from '../../utils/isObjectEmpty';
 import useSWR from 'swr';
-
 import styles from './index.module.scss';
-// import styles from './index.module.css';
 
 export async function getStaticProps(staticinitialProps) {
   const id = staticinitialProps?.params?.id;
@@ -52,19 +50,19 @@ export async function getStaticPaths() {
 }
 
 const CoffeeStore = (initialProps) => {
-  // Grab the id from url
   const router = useRouter();
   const id = router.query.id;
-  console.log('router data: ', router);
 
-  // Set initial value of coffeeStore to be the data from getStaticProps. If not exist, use the data from useContext
+  // Set initial value of coffeeStore to be the data from getStaticProps. If not exist, use the data from useContext and airtable
   const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
-  const [isVoted, setIsVoted] = useState(false);
-  const [voting, setVoting] = useState(1);
+  const [voting, setVoting] = useState(0);
 
   const { state } = useContext(CoffeeStoresContext);
   const { coffeeStores: coffeeStoresNearMe } = state;
 
+  //! Function to create new coffee store data on airtable
+  // - Create new coffee store on airtable for the data on getStaticProps and context
+  // - When the data exist on airtable, no need to create new record, just return the existed record
   const handleCreateCoffeeStoreAirtable = async (coffeeStore) => {
     const { id, name, imgUrl, address, region } = coffeeStore || {};
 
@@ -83,15 +81,35 @@ const CoffeeStore = (initialProps) => {
       }),
     });
     const dbCoffeeStore = await response.json();
-    console.log('dbCoffeeStore: ', dbCoffeeStore);
   };
 
+  //! Function to get the coffee store record from airtable database by coffeeStore ID
+  // - If the coffee store id is not found on getStaticProps and context data, query the data from airtable database
   const handleGetCoffeeStoreByIdAirtable = async (coffeeStoreQueryId) => {
     const response = await fetch(
       `/api/getCoffeeStoreById?id=${coffeeStoreQueryId}`
     );
     const dbCoffeeStore = await response.json();
     return dbCoffeeStore;
+  };
+
+  //! Function to update the voting property on specific coffee store by using coffeeStore ID
+  const handleButtonUpVoteClick = async () => {
+    const response = await fetch('/api/favouriteCoffeeStoreById', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: id,
+      }),
+    });
+    const data = await response.json();
+    if (!!data) {
+      const updatedCoffeeStoreData = data?.coffeeStore?.[0] || {};
+      const { voting: updatedVoting } = updatedCoffeeStoreData;
+      setVoting(updatedVoting);
+    }
   };
 
   useEffect(() => {
@@ -138,17 +156,15 @@ const CoffeeStore = (initialProps) => {
   }, [id, initialProps, initialProps.coffeeStore, coffeeStoresNearMe]);
 
   const { name, address, region, imgUrl } = coffeeStore || {};
-  console.log('coffeeStore:', coffeeStore);
-  console.log('queryId: ', id);
 
-  // Try fetching the data from /api/getCoffeeStoreById using SWR (Stale-While-Revalidate)
+  //! Fetch the data using SWR (Stale While Revalidate) method to get auto updated voting data
+  // - Need SWR to get auto rendering & Refetching the coffeeStore data when there is an update from different browser / tab
+  // - When the main tab update the voting value, the same page from different browser will be updated too automatically
   const fetcher = (url) => fetch(url).then((res) => res.json());
   const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
 
-  // Get the specific coffee store by id using SWR
   useEffect(() => {
     if (!!data) {
-      console.log('data from SWR: ', data);
       // Set the coffeeStore state using data from SWR
       setCoffeeStore(data?.coffeeStore?.[0] || {});
       // Set the voting state using voting data from SWR
@@ -223,7 +239,7 @@ const CoffeeStore = (initialProps) => {
               <Image src={starIcon} alt="" width={24} height={24} />
               <p className={styles.detail_text}>{voting}</p>
             </div>
-            {isVoted ? (
+            {/* {isVoted ? (
               <button
                 className={cx(styles.btn, styles.remove_vote_btn)}
                 onClick={() => {
@@ -243,7 +259,13 @@ const CoffeeStore = (initialProps) => {
               >
                 Up vote!
               </button>
-            )}
+            )} */}
+            <button
+              className={cx(styles.btn, styles.up_vote_btn)}
+              onClick={handleButtonUpVoteClick}
+            >
+              Up vote!
+            </button>
           </div>
         </div>
       </div>
