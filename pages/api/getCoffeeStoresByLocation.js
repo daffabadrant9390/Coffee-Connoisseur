@@ -1,4 +1,4 @@
-import { fetchCoffeeStoresData } from "../../lib/services/coffeeStores";
+import { fetchCoffeeStoresData } from '../../lib/services/coffeeStores';
 
 const getCoffeeStoresByLocation = async (req, res) => {
   try {
@@ -7,17 +7,16 @@ const getCoffeeStoresByLocation = async (req, res) => {
     const response = await fetchCoffeeStoresData(latLong, limit);
     res.status(200);
     res.json({
-      response
+      response,
     });
-
-  } catch(err) {
+  } catch (err) {
     console.error(`Error Occured: `, err);
     res.status(500);
     res.json({
       message: 'Oh no!, something went wrong on the server!.',
-      err
+      err,
     });
   }
-}
+};
 
 export default getCoffeeStoresByLocation;
